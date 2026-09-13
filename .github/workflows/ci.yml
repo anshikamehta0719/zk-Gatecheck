@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (tsc)
+        run: npx tsc -b
+
+      - name: Run unit tests (vitest)
+        run: npm test
+
+      - name: Production build (vite)
+        run: npx vite build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  contract-lint:
+    name: Compact contract sanity check
+    runs-on: ubuntu-latest
+    continue-on-error: true # Compact toolchain isn't installed on this runner yet — see README
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for Compact CLI
+        run: |
+          if command -v compact >/dev/null 2>&1; then
+            compact compile contracts/gatecheck.compact managed/gatecheck
+          else
+            echo "::warning::compact CLI not installed on this runner — skipping on-chain compile step."
+            echo "Install the Midnight Compact compiler to enable this job: https://docs.midnight.network"
+          fi
