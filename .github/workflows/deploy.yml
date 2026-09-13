@@ -25,6 +25,7 @@ jobs:
       - name: Compile Contract
         run: |
           cd preprod-deployment/infra/docker
+          echo "INDEXER_SECRET=dummy_secret" > .env
           docker compose up -d proof-server
           sleep 15
           cd ../..
