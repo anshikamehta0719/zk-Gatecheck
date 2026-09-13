@@ -24,8 +24,11 @@ jobs:
 
       - name: Compile Contract
         run: |
-          cd preprod-deployment
-          docker run --rm -v ${{ github.workspace }}/preprod-deployment:/app -w /app --entrypoint compactc midnightnetwork/compactc contracts/src/bboard.compact contracts/src/managed/bboard
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          compact update
+          cd preprod-deployment/contracts
+          compact compile src/bboard.compact ./src/managed/bboard
         
       - name: Install dependencies
         run: |
