@@ -34,6 +34,7 @@ jobs:
         run: |
           cd preprod-deployment
           npm install
+          npm install --no-save tsx
           
       - name: Build Contract Bindings
         run: |
@@ -43,6 +44,6 @@ jobs:
       - name: Deploy Contract
         run: |
           cd preprod-deployment/cli
-          npx ts-node --esm src/launcher/deploy-gatecheck.ts
+          npx tsx src/launcher/deploy-gatecheck.ts
         env:
           WALLET_SEED: ${{ secrets.WALLET_SEED }}

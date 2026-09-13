@@ -1,12 +1,12 @@
-import { PreprodRemoteConfig } from '../config.js';
-import { MidnightWalletProvider } from '../midnight-wallet-provider.js';
+import { PreprodRemoteConfig } from '../config.ts';
+import { MidnightWalletProvider } from '../midnight-wallet-provider.ts';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledBBoardContractContract } from '@midnight-ntwrk/bboard-contract';
-import { createLogger } from '../logger-utils.js';
+import { createLogger } from '../logger-utils.ts';
 
 async function main() {
   console.log("Starting deployment to Preprod...");
