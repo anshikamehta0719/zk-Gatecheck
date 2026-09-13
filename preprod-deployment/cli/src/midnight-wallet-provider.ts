@@ -15,18 +15,15 @@
 
 import {
   type CoinPublicKey,
-  DustSecretKey,
   type EncPublicKey,
   type FinalizedTransaction,
   LedgerParameters,
-  ZswapSecretKeys,
 } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import { type MidnightProvider, type UnboundTransaction, type WalletProvider } from '@midnight-ntwrk/midnight-js-types';
 import { ttlOneHour } from '@midnight-ntwrk/midnight-js-utils';
 import { type WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { Logger } from 'pino';
 
-import { getInitialShieldedState } from './wallet-utils';
 import { type DustWalletOptions, type EnvironmentConfiguration, FluentWalletBuilder } from '@midnight-ntwrk/testkit-js';
 
 type UnshieldedKeystore = {
@@ -36,64 +33,53 @@ type UnshieldedKeystore = {
 
 /**
  * Provider class that implements wallet functionality for the Midnight network.
- * Handles transaction balancing, submission, and wallet state management.
+ * Uses FluentWalletBuilder.build() which auto-starts the wallet internally.
  */
 export class MidnightWalletProvider implements MidnightProvider, WalletProvider {
   logger: Logger;
   readonly env: EnvironmentConfiguration;
   readonly wallet: WalletFacade;
   readonly unshieldedKeystore: UnshieldedKeystore;
-  readonly zswapSecretKeys: ZswapSecretKeys;
-  readonly dustSecretKey: DustSecretKey;
-  readonly shieldedSeed: Uint8Array;
-  readonly dustSeed: Uint8Array;
+  private _coinPublicKey: any;
+  private _encPublicKey: any;
 
   private constructor(
     logger: Logger,
     environmentConfiguration: EnvironmentConfiguration,
     wallet: WalletFacade,
-    zswapSecretKeys: ZswapSecretKeys,
-    dustSecretKey: DustSecretKey,
     unshieldedKeystore: UnshieldedKeystore,
-    shieldedSeed: Uint8Array,
-    dustSeed: Uint8Array,
+    coinPublicKey: any,
+    encPublicKey: any,
   ) {
     this.logger = logger;
     this.env = environmentConfiguration;
     this.wallet = wallet;
-    this.zswapSecretKeys = zswapSecretKeys;
-    this.dustSecretKey = dustSecretKey;
     this.unshieldedKeystore = unshieldedKeystore;
-    this.shieldedSeed = shieldedSeed;
-    this.dustSeed = dustSeed;
+    this._coinPublicKey = coinPublicKey;
+    this._encPublicKey = encPublicKey;
   }
 
   getCoinPublicKey(): CoinPublicKey {
-    return this.zswapSecretKeys.coinPublicKey;
+    return this._coinPublicKey;
   }
 
   getEncryptionPublicKey(): EncPublicKey {
-    return this.zswapSecretKeys.encryptionPublicKey;
+    return this._encPublicKey;
   }
 
   async balanceTx(tx: UnboundTransaction, ttl: Date = ttlOneHour()): Promise<FinalizedTransaction> {
-    const recipe = await this.wallet.balanceUnboundTransaction(
-      tx,
-      { shieldedSecretKeys: this.zswapSecretKeys, dustSecretKey: this.dustSecretKey },
-      { ttl },
-    );
-    const signedRecipe = await this.wallet.signRecipe(recipe, (payload) => this.unshieldedKeystore.signData(payload));
-    return this.wallet.finalizeRecipe(signedRecipe);
+    const recipe = await (this.wallet as any).balanceUnboundTransaction(tx, undefined, { ttl });
+    const signedRecipe = await (this.wallet as any).signRecipe(recipe, (payload: Uint8Array) => this.unshieldedKeystore.signData(payload));
+    return (this.wallet as any).finalizeRecipe(signedRecipe);
   }
 
   submitTx(tx: FinalizedTransaction): Promise<string> {
     return this.wallet.submitTransaction(tx);
   }
 
-  // We do not wait for funds here; the CLI flow handles it explicitly.
+  // Wallet is already started via build()
   async start(): Promise<void> {
-    this.logger.debug('Starting wallet...');
-    await (this.wallet as any).start(this.shieldedSeed, this.dustSeed);
+    this.logger.debug('Wallet already started via build()');
   }
 
   async stop(): Promise<void> {
@@ -107,27 +93,36 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
       feeBlocksMargin: 5,
     };
     const builder = FluentWalletBuilder.forEnvironment(env).withDustOptions(dustOptions);
+    
+    // Use build() which auto-starts the wallet — avoids seed format issues with buildWithoutStarting()
     const buildResult = seed
-      ? await builder.withSeed(seed).buildWithoutStarting()
-      : await builder.withRandomSeed().buildWithoutStarting();
-    const { wallet, seeds, keystore } = buildResult as unknown as {
+      ? await builder.withSeed(seed).build()
+      : await builder.withRandomSeed().build();
+    
+    const { wallet, keystore } = buildResult as unknown as {
       wallet: WalletFacade;
-      seeds: { masterSeed: string; shielded: Uint8Array; dust: Uint8Array };
       keystore: UnshieldedKeystore;
     };
 
-    const initialState = await getInitialShieldedState(logger, wallet.shielded);
-    logger.debug(`Wallet seed: ${seeds.masterSeed}, address: ${initialState.address.coinPublicKeyString()}`);
+    // Extract public keys from the wallet's shielded state
+    let coinPublicKey: any;
+    let encPublicKey: any;
+    try {
+      const state = await (wallet as any).shielded.state();
+      coinPublicKey = state?.address?.coinPublicKey?.() ?? state?.coinPublicKey;
+      encPublicKey = state?.address?.encryptionPublicKey?.() ?? state?.encryptionPublicKey;
+      logger.info(`Wallet ready, coin public key available: ${!!coinPublicKey}`);
+    } catch (e) {
+      logger.warn(`Could not extract public keys from wallet state: ${e}`);
+    }
 
     return new MidnightWalletProvider(
       logger,
       env,
       wallet,
-      ZswapSecretKeys.fromSeed(seeds.shielded),
-      DustSecretKey.fromSeed(seeds.dust),
       keystore,
-      seeds.shielded,
-      seeds.dust,
+      coinPublicKey,
+      encPublicKey,
     );
   }
 }
