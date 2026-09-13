@@ -29,9 +29,6 @@ jobs:
           compact update
           cd preprod-deployment/contracts
           compact compile src/bboard.compact ./src/managed/bboard
-          
-          # Patch the generated JS files to bypass the version mismatch check!
-          sed -i 's/0.19.0/0.16.0/g' src/managed/bboard/contract/*
         
       - name: Install dependencies
         run: |
