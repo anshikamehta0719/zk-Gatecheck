@@ -65,10 +65,24 @@ export const createBBoardPrivateState = (secretKey: Uint8Array) => ({
  * only the binding for the privateState in scope.
  */
 export const witnesses = {
-  localSecretKey: ({
+  secretKey: ({
     privateState,
   }: WitnessContext<Ledger, BBoardPrivateState>): [
     BBoardPrivateState,
     Uint8Array,
   ] => [privateState, privateState.secretKey],
+
+  merklePath: ({
+    privateState,
+  }: WitnessContext<Ledger, BBoardPrivateState>): [
+    BBoardPrivateState,
+    [Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array],
+  ] => [privateState, [new Uint8Array(32), new Uint8Array(32), new Uint8Array(32), new Uint8Array(32), new Uint8Array(32)]],
+
+  pathDirections: ({
+    privateState,
+  }: WitnessContext<Ledger, BBoardPrivateState>): [
+    BBoardPrivateState,
+    [boolean, boolean, boolean, boolean, boolean],
+  ] => [privateState, [false, false, false, false, false]],
 };
