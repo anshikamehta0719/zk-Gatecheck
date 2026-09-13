@@ -37,10 +37,11 @@ jobs:
           cd ../
           node -e "
             const fs = require('fs');
-            const path1 = 'node_modules/@midnight-ntwrk/compact-runtime/dist/circuit-context.js';
-            const path2 = 'contracts/node_modules/@midnight-ntwrk/compact-runtime/dist/circuit-context.js';
-            const path = fs.existsSync(path1) ? path1 : (fs.existsSync(path2) ? path2 : null);
-            if (!path) throw new Error('Could not find circuit-context.js in node_modules');
+            const cp = require('child_process');
+            const paths = cp.execSync('find . -name circuit-context.js').toString().trim().split('\\n').filter(Boolean);
+            if (paths.length === 0) throw new Error('Could not find circuit-context.js');
+            const path = paths[0];
+            console.log('Found circuit-context.js at:', path);
             let code = fs.readFileSync(path, 'utf8');
             code = code.replace(
               /const createCircuitContext = \([^)]+\) => \{/,
