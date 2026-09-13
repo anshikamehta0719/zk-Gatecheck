@@ -21,15 +21,10 @@ export * from "./witnesses";
 import * as CompiledBBoardContract from "./managed/bboard/contract/index.js";
 import * as Witnesses from "./witnesses";
 
-class ContractWrapper extends CompiledBBoardContract.Contract<any, any> {
-  constructor() {
-    super(Witnesses.witnesses);
-  }
-}
-
 export const CompiledBBoardContractContract = CompiledContract.make(
   "bboard",
-  ContractWrapper as any
+  CompiledBBoardContract.Contract,
+  Witnesses.witnesses
 ).pipe(
   CompiledContract.withCompiledFileAssets("./managed/bboard")
 ) as any;
