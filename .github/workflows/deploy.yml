@@ -18,6 +18,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install dependencies
+        run: |
+          cd preprod-deployment
+          npm install
+          npm install --no-save tsx
+
       - name: Copy Contract
         run: |
           cp contracts/gatecheck.compact preprod-deployment/contracts/src/bboard.compact
@@ -26,38 +32,12 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
           export PATH="$HOME/.local/bin:$PATH"
-          compact update
+          compact update 0.31.1 || compact update 0.31.0
+          compact --version
           cd preprod-deployment/contracts
           compact compile src/bboard.compact ./src/managed/bboard
-          
-          # Patch the generated JS files to bypass the version mismatch check
-          sed -i 's/0.19.0/0.16.0/g' src/managed/bboard/contract/*
-          
-          # Monkeypatch the compact-runtime 0.16.0 to accept the 0.19.0 object signature for createCircuitContext
-          cd ../
-          node -e "
-            const fs = require('fs');
-            const cp = require('child_process');
-            const paths = cp.execSync('find . -name circuit-context.js').toString().trim().split('\\n').filter(Boolean);
-            if (paths.length === 0) throw new Error('Could not find circuit-context.js');
-            const path = paths[0];
-            console.log('Found circuit-context.js at:', path);
-            let code = fs.readFileSync(path, 'utf8');
-            code = code.replace(
-              /const createCircuitContext = \([^)]+\) => \{/,
-              'const createCircuitContext = (contractAddress, coinPublicKeyOrZswapState, contractState, privateState, gasLimit, costModel, time) => { if (typeof contractAddress === \"object\" && contractAddress !== null && contractAddress.contractAddress) { let obj = contractAddress; return _createCircuitContextReal(obj.contractAddress, obj.zswapLocalState || obj.coinPublicKey, obj.contractState, obj.privateState, obj.gasLimit, obj.costModel, obj.time); } return _createCircuitContextReal(contractAddress, coinPublicKeyOrZswapState, contractState, privateState, gasLimit, costModel, time); }; const _createCircuitContextReal = (contractAddress, coinPublicKeyOrZswapState, contractState, privateState, gasLimit, costModel, time) => {'
-            );
-            fs.writeFileSync(path, code);
-          "
-          cd contracts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-      - name: Install dependencies
-        run: |
-          cd preprod-deployment
-          npm install
-          npm install --no-save tsx
           
       - name: Build Contract Bindings
         run: |
