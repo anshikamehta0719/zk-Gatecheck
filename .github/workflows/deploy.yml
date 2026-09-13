@@ -37,7 +37,7 @@ jobs:
           cd ../
           node -e "
             const fs = require('fs');
-            const path = 'contracts/node_modules/@midnight-ntwrk/compact-runtime/dist/circuit-context.js';
+            const path = 'node_modules/@midnight-ntwrk/compact-runtime/dist/circuit-context.js';
             let code = fs.readFileSync(path, 'utf8');
             code = code.replace(
               /const createCircuitContext = \([^)]+\) => \{/,
