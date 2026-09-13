@@ -1,0 +1,45 @@
+name: Deploy to Preprod
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'contracts/**'
+      - 'preprod-deployment/**'
+      - '.github/workflows/deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Copy Contract
+        run: |
+          cp contracts/gatecheck.compact preprod-deployment/contracts/src/bboard.compact
+
+      - name: Compile Contract
+        run: |
+          cd preprod-deployment/contracts
+          docker run --rm -v ${{ github.workspace }}/preprod-deployment/contracts:/app -w /app midnightnetwork/compact:latest compile src/bboard.compact ./src/managed/bboard
+        
+      - name: Install dependencies
+        run: |
+          cd preprod-deployment
+          npm install
+          
+      - name: Build Contract Bindings
+        run: |
+          cd preprod-deployment/contracts
+          npm run build
+          
+      - name: Deploy Contract
+        run: |
+          cd preprod-deployment/cli
+          npx ts-node --esm src/launcher/deploy-gatecheck.ts
+        env:
+          WALLET_SEED: ${{ secrets.WALLET_SEED }}
