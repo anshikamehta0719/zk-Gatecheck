@@ -45,6 +45,8 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
   readonly unshieldedKeystore: UnshieldedKeystore;
   readonly zswapSecretKeys: ZswapSecretKeys;
   readonly dustSecretKey: DustSecretKey;
+  readonly shieldedSeed: Uint8Array;
+  readonly dustSeed: Uint8Array;
 
   private constructor(
     logger: Logger,
@@ -53,6 +55,8 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
     zswapSecretKeys: ZswapSecretKeys,
     dustSecretKey: DustSecretKey,
     unshieldedKeystore: UnshieldedKeystore,
+    shieldedSeed: Uint8Array,
+    dustSeed: Uint8Array,
   ) {
     this.logger = logger;
     this.env = environmentConfiguration;
@@ -60,6 +64,8 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
     this.zswapSecretKeys = zswapSecretKeys;
     this.dustSecretKey = dustSecretKey;
     this.unshieldedKeystore = unshieldedKeystore;
+    this.shieldedSeed = shieldedSeed;
+    this.dustSeed = dustSeed;
   }
 
   getCoinPublicKey(): CoinPublicKey {
@@ -87,7 +93,7 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
   // We do not wait for funds here; the CLI flow handles it explicitly.
   async start(): Promise<void> {
     this.logger.debug('Starting wallet...');
-    await this.wallet.start(this.zswapSecretKeys, this.dustSecretKey);
+    await (this.wallet as any).start(this.shieldedSeed, this.dustSeed);
   }
 
   async stop(): Promise<void> {
@@ -120,6 +126,8 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
       ZswapSecretKeys.fromSeed(seeds.shielded),
       DustSecretKey.fromSeed(seeds.dust),
       keystore,
+      seeds.shielded,
+      seeds.dust,
     );
   }
 }
