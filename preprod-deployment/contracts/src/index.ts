@@ -23,7 +23,8 @@ import * as Witnesses from "./witnesses";
 
 export const CompiledBBoardContractContract = CompiledContract.make(
   "bboard",
-  CompiledBBoardContract.Contract as any
+  CompiledBBoardContract.Contract,
+  Witnesses.witnesses
 ).pipe(
   CompiledContract.withCompiledFileAssets("./managed/bboard")
-) as any;
+);
