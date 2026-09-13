@@ -5,7 +5,7 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { CompiledBBoardContractContract, witnesses, createBBoardPrivateState } from '@midnight-ntwrk/bboard-contract';
+import { CompiledBBoardContractContract } from '@midnight-ntwrk/bboard-contract';
 import { createLogger } from '../logger-utils.ts';
 
 async function main() {
@@ -27,9 +27,6 @@ async function main() {
   const zkConfigProvider = new NodeZkConfigProvider(config.zkConfigPath);
   const storagePassword = "temporary-password";
   
-  // Create initial private state with a dummy secret key
-  const initialPrivateState = createBBoardPrivateState(new Uint8Array(32));
-  
   const providers = {
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: config.privateStateStoreName,
@@ -50,10 +47,8 @@ async function main() {
     
     const deployed = await deployContract(providers, {
         compiledContract: CompiledBBoardContractContract,
-        privateState: initialPrivateState,
-        witnesses: witnesses,
         args: [initialRoot]
-    } as any);
+    });
     
     console.log("=========================================");
     console.log("SUCCESS! Contract Deployed!");
