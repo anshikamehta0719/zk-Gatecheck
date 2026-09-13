@@ -24,8 +24,8 @@ jobs:
 
       - name: Compile Contract
         run: |
-          cd preprod-deployment/contracts
-          docker run --rm -v ${{ github.workspace }}/preprod-deployment/contracts:/app -w /app midnightnetwork/compact:latest compile src/bboard.compact ./src/managed/bboard
+          cd preprod-deployment
+          docker run --rm -v ${{ github.workspace }}/preprod-deployment:/app -w /app --entrypoint compactc midnightnetwork/compactc contracts/src/bboard.compact contracts/src/managed/bboard
         
       - name: Install dependencies
         run: |
