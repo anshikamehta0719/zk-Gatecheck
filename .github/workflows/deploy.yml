@@ -24,11 +24,13 @@ jobs:
 
       - name: Compile Contract
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-          export PATH="$HOME/.local/bin:$PATH"
-          compact update
-          cd preprod-deployment/contracts
-          compact compile src/bboard.compact ./src/managed/bboard
+          cd preprod-deployment/infra/docker
+          docker compose up -d proof-server
+          sleep 15
+          cd ../..
+          docker run --rm --network host -v ${{ github.workspace }}/preprod-deployment:/app -w /app -e MIDNIGHT_PARAM_SOURCE=http://127.0.0.1:6300 --entrypoint compactc midnightnetwork/compactc contracts/src/bboard.compact contracts/src/managed/bboard
+          cd infra/docker
+          docker compose down
         
       - name: Install dependencies
         run: |
