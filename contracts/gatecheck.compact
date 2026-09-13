@@ -36,7 +36,6 @@ import CompactStandardLibrary;
 
 // Depth of the allowlist Merkle tree. 2^20 ≈ 1,048,576 possible members —
 // generous headroom for an MVP allowlist while keeping proving time low.
-export const TREE_DEPTH: Uint<8> = 20;
 
 export ledger allowlistRoot: Bytes<32>;
 export ledger issuer: ZswapCoinPublicKey;
@@ -47,16 +46,15 @@ export ledger nullifiers: Set<Bytes<32>>;
 // witness declarations — supplied privately by the caller, never on-chain
 // ----------------------------------------------------------------------------
 witness secretKey(): Bytes<32>;
-witness merklePath(): Vector<20, Bytes<32>>;
-witness pathDirections(): Vector<20, Boolean>;
+witness merklePath(): Vector<5, Bytes<32>>;
+witness pathDirections(): Vector<5, Boolean>;
 
 // ----------------------------------------------------------------------------
 // constructor — deploys the contract with the issuer's initial root
 // ----------------------------------------------------------------------------
 constructor(initialRoot: Bytes<32>) {
-  allowlistRoot = initialRoot;
-  issuer = own_public_key();
-  accessGranted = default<Counter>;
+  allowlistRoot = disclose(initialRoot);
+  issuer = ownPublicKey();
 }
 
 // ----------------------------------------------------------------------------
@@ -66,7 +64,7 @@ constructor(initialRoot: Bytes<32>) {
 // roots either.
 // ----------------------------------------------------------------------------
 export circuit publishAllowlist(newRoot: Bytes<32>): [] {
-  assert(own_public_key() == issuer, "only the issuer may update the allowlist");
+  assert(ownPublicKey() == issuer, "only the issuer may update the allowlist");
   allowlistRoot = disclose(newRoot);
 }
 
@@ -76,7 +74,7 @@ export circuit publishAllowlist(newRoot: Bytes<32>): [] {
 // reveals nothing about the member's wallet or identity.
 // ----------------------------------------------------------------------------
 circuit leafOf(secret: Bytes<32>): Bytes<32> {
-  return persistent_hash<Bytes<32>>(pad(32, "gatecheck:leaf") ++ secret);
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "gatecheck:leaf"), secret]);
 }
 
 // ----------------------------------------------------------------------------
@@ -85,7 +83,7 @@ circuit leafOf(secret: Bytes<32>): Bytes<32> {
 // not reveal the secret or the leaf.
 // ----------------------------------------------------------------------------
 circuit nullifierOf(secret: Bytes<32>): Bytes<32> {
-  return persistent_hash<Bytes<32>>(pad(32, "gatecheck:null") ++ secret);
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "gatecheck:null"), secret]);
 }
 
 // ----------------------------------------------------------------------------
@@ -93,17 +91,15 @@ circuit nullifierOf(secret: Bytes<32>): Bytes<32> {
 // ----------------------------------------------------------------------------
 circuit merkleRootFrom(
   leaf: Bytes<32>,
-  path: Vector<20, Bytes<32>>,
-  directions: Vector<20, Boolean>
+  path: Vector<5, Bytes<32>>,
+  directions: Vector<5, Boolean>
 ): Bytes<32> {
-  let current = leaf;
-  for (const i of 0..20) {
-    const sibling = path[i];
-    current = directions[i]
-      ? persistent_hash<Bytes<32>>(sibling ++ current)
-      : persistent_hash<Bytes<32>>(current ++ sibling);
-  }
-  return current;
+  const h0 = directions[0] ? persistentHash<Vector<2, Bytes<32>>>([path[0], leaf]) : persistentHash<Vector<2, Bytes<32>>>([leaf, path[0]]);
+  const h1 = directions[1] ? persistentHash<Vector<2, Bytes<32>>>([path[1], h0]) : persistentHash<Vector<2, Bytes<32>>>([h0, path[1]]);
+  const h2 = directions[2] ? persistentHash<Vector<2, Bytes<32>>>([path[2], h1]) : persistentHash<Vector<2, Bytes<32>>>([h1, path[2]]);
+  const h3 = directions[3] ? persistentHash<Vector<2, Bytes<32>>>([path[3], h2]) : persistentHash<Vector<2, Bytes<32>>>([h2, path[3]]);
+  const h4 = directions[4] ? persistentHash<Vector<2, Bytes<32>>>([path[4], h3]) : persistentHash<Vector<2, Bytes<32>>>([h3, path[4]]);
+  return h4;
 }
 
 // ----------------------------------------------------------------------------
