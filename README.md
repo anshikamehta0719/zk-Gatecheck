@@ -16,6 +16,7 @@ Built on **Midnight** for the **Midnight Builder Challenge — Level 4 (Waxing G
 ## ⚡ Quick Links
 
 - 🌐 **Live dApp:** [https://zk-gatecheck.vercel.app/](https://zk-gatecheck.vercel.app/)
+- 🐦 **Product X Profile:** [@zkgatechek](https://x.com/zkgatechek) · [Launch Announcement Tweet](https://x.com/zkgatechek/status/2099499510703812849)
 - 🎬 **Demo Video:** [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing)
 - 📖 **Documentation:** [Usage Guide](./docs/USAGE.md) · [Architecture Spec](./docs/ARCHITECTURE.md)
 
@@ -125,7 +126,7 @@ npm run generate-allowlist -- --count 100
 - [x] **Midnight Explorer Proof:** [Preprod Explorer Verification](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5)
 - [x] **Documentation:** Setup instructions + [`docs/USAGE.md`](./docs/USAGE.md) + [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 - [x] **CI/CD Pipeline Running:** [GitHub Actions Workflows](https://github.com/anshikamehta0719/zk-Gatecheck/actions)
-- [x] **Product X Profile:** [@zk_gatecheck](https://x.com/zk_gatecheck)
+- [x] **Product X Profile:** [@zkgatechek](https://x.com/zkgatechek) ([Launch Announcement Tweet](https://x.com/zkgatechek/status/2099499510703812849))
 - [x] **Demo Video:** [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing)
 - [x] **Minimum 15 Commits:** 50+ commits on `main`
 
