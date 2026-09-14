@@ -51,3 +51,12 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
           WALLET_SEED: ${{ secrets.WALLET_SEED }}
+
+      - name: Upload Deployment Info
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-info
+          path: |
+            preprod-deployment/cli/deployment.json
+            deployed_contract.json

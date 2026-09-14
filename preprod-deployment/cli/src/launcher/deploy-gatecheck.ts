@@ -1,14 +1,19 @@
-import { PreprodRemoteConfig } from '../config.ts';
-import { MidnightWalletProvider } from '../midnight-wallet-provider.ts';
+import { WebSocket } from 'ws';
+globalThis.WebSocket = WebSocket as unknown as typeof globalThis.WebSocket;
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { PreprodRemoteConfig } from '../config.js';
+import { MidnightWalletProvider } from '../midnight-wallet-provider.js';
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledBBoardContractContract } from '@midnight-ntwrk/bboard-contract';
-import { createLogger } from '../logger-utils.ts';
-import { getUnshieldedAddress } from '../wallet-utils.ts';
-import { generateDust } from '../generate-dust.ts';
+import { createLogger } from '../logger-utils.js';
+import { getUnshieldedAddress } from '../wallet-utils.js';
+import { generateDust } from '../generate-dust.js';
 import { unshieldedToken } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 import { FaucetClient } from '@midnight-ntwrk/testkit-js';
 import * as Rx from 'rxjs';
@@ -24,7 +29,7 @@ async function main() {
   console.log("Starting environment...");
   const envConfiguration = await testEnv.start();
   
-  console.log("Building wallet provider...");
+  console.log("Building wallet provider (with chain-tip fast forward)...");
   const walletProvider = await MidnightWalletProvider.build(logger, envConfiguration, seed);
   await walletProvider.start();
   
@@ -63,13 +68,13 @@ async function main() {
   }
 
   console.log("Syncing DUST wallet with Preprod...");
-  await walletProvider.wallet.dust.waitForSyncedState();
+  await walletProvider.wallet.dust.waitForSyncedState(100n);
 
   console.log("Checking / Registering DUST generation...");
   const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
   if (dustTx) {
     console.log(`Registered DUST generation (tx: ${dustTx}). Waiting for dust state to sync...`);
-    await walletProvider.wallet.dust.waitForSyncedState();
+    await walletProvider.wallet.dust.waitForSyncedState(100n);
   } else {
     console.log("DUST already registered or available.");
   }
@@ -102,10 +107,25 @@ async function main() {
         args: [initialRoot]
     });
     
-    console.log("=========================================");
-    console.log("SUCCESS! Contract Deployed!");
-    console.log("Contract Address:", deployed.deployTxData.public.contractAddress);
-    console.log("=========================================");
+    const contractAddress = deployed.deployTxData.public.contractAddress;
+    console.log("================================================================================");
+    console.log("🎉 SUCCESS! CONTRACT DEPLOYED TO PREPROD!");
+    console.log("CONTRACT_ADDRESS=" + contractAddress);
+    console.log("Contract Address:", contractAddress);
+    console.log("Explorer:", `https://preprod.midnight.network/contract/${contractAddress}`);
+    console.log("================================================================================");
+
+    const deploymentInfo = {
+      network: "preprod",
+      contractAddress,
+      explorerUrl: `https://preprod.midnight.network/contract/${contractAddress}`,
+      indexer: envConfiguration.indexer,
+      node: envConfiguration.node,
+      deployedAt: new Date().toISOString(),
+    };
+
+    fs.writeFileSync('deployment.json', JSON.stringify(deploymentInfo, null, 2));
+    fs.writeFileSync('../../deployed_contract.json', JSON.stringify(deploymentInfo, null, 2));
     success = true;
   } catch (err) {
     console.error("Deployment failed:", err);

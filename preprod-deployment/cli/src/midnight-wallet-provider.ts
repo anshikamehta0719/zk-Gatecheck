@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { WebSocket } from 'ws';
 import {
   type CoinPublicKey,
   DustSecretKey,
@@ -26,13 +27,109 @@ import { ttlOneHour } from '@midnight-ntwrk/midnight-js-utils';
 import { type WalletFacade } from '@midnight-ntwrk/wallet-sdk-facade';
 import type { Logger } from 'pino';
 
-import { getInitialShieldedState } from './wallet-utils';
-import { type DustWalletOptions, type EnvironmentConfiguration, FluentWalletBuilder } from '@midnight-ntwrk/testkit-js';
+import { getInitialShieldedState } from './wallet-utils.js';
+import {
+  type DustWalletOptions,
+  type EnvironmentConfiguration,
+  WalletFactory,
+  WalletSeeds,
+} from '@midnight-ntwrk/testkit-js';
+import {
+  DustWallet,
+  ShieldedWallet,
+  createKeystore,
+  InMemoryTransactionHistoryStorage,
+  WalletEntrySchema,
+  mergeWalletEntries,
+} from '@midnight-ntwrk/wallet-sdk';
 
 type UnshieldedKeystore = {
   getPublicKey(): unknown;
   signData(payload: Uint8Array): string;
 };
+
+/**
+ * Probes the indexer WebSocket for the current maximum ledger event ID.
+ * This allows newly-created deployment wallets to fast-forward past millions of
+ * historical blocks rather than streaming every historical block from genesis into RAM.
+ */
+async function probeLatestLedgerEventId(
+  wsUrl: string,
+  queryName: 'dustLedgerEvents' | 'zswapLedgerEvents',
+): Promise<number> {
+  return new Promise((resolve) => {
+    try {
+      const WsClass = (globalThis.WebSocket ?? WebSocket) as any;
+      const ws = new WsClass(wsUrl, 'graphql-transport-ws');
+      const timer = setTimeout(() => {
+        try {
+          ws.close();
+        } catch {}
+        resolve(0);
+      }, 5000);
+
+      const onOpen = () => {
+        try {
+          ws.send(JSON.stringify({ type: 'connection_init' }));
+        } catch {}
+      };
+
+      const onMessage = (data: any) => {
+        try {
+          const raw = typeof data === 'string' ? data : data?.data ? data.data.toString() : data?.toString?.();
+          const msg = JSON.parse(raw);
+          if (msg.type === 'connection_ack') {
+            ws.send(
+              JSON.stringify({
+                id: 'probe',
+                type: 'subscribe',
+                payload: {
+                  query: `subscription { ${queryName} { id maxId } }`,
+                },
+              }),
+            );
+          } else if (msg.type === 'next') {
+            clearTimeout(timer);
+            const ev = msg.payload?.data?.[queryName];
+            const maxId = Number(ev?.maxId ?? 0);
+            try {
+              ws.close();
+            } catch {}
+            resolve(maxId);
+          }
+        } catch {
+          clearTimeout(timer);
+          try {
+            ws.close();
+          } catch {}
+          resolve(0);
+        }
+      };
+
+      const onError = () => {
+        clearTimeout(timer);
+        try {
+          ws.close();
+        } catch {}
+        resolve(0);
+      };
+
+      if (typeof ws.on === 'function') {
+        ws.on('open', onOpen);
+        ws.on('message', onMessage);
+        ws.on('error', onError);
+        ws.on('close', onError);
+      } else {
+        ws.onopen = onOpen;
+        ws.onmessage = onMessage;
+        ws.onerror = onError;
+        ws.onclose = onError;
+      }
+    } catch {
+      resolve(0);
+    }
+  });
+}
 
 /**
  * Provider class that implements wallet functionality for the Midnight network.
@@ -108,28 +205,80 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
       additionalFeeOverhead: env.walletNetworkId === 'undeployed' ? 500_000_000_000_000_000n : 1_000n,
       feeBlocksMargin: 5,
     };
-    const builder = FluentWalletBuilder.forEnvironment(env).withDustOptions(dustOptions);
-    const buildResult = seed
-      ? await builder.withSeed(seed).buildWithoutStarting()
-      : await builder.withRandomSeed().buildWithoutStarting();
-    const { wallet, seeds, keystore } = buildResult as unknown as {
-      wallet: WalletFacade;
-      seeds: { masterSeed: string; shielded: Uint8Array; dust: Uint8Array };
-      keystore: UnshieldedKeystore;
+
+    const walletConfig = {
+      indexerClientConnection: {
+        indexerHttpUrl: env.indexer,
+        indexerWsUrl: env.indexerWS,
+      },
+      provingServerUrl: new URL(env.proofServer),
+      networkId: env.walletNetworkId,
+      relayURL: new URL(env.nodeWS),
+      txHistoryStorage: new InMemoryTransactionHistoryStorage(WalletEntrySchema, mergeWalletEntries),
+      costParameters: {
+        feeBlocksMargin: 5,
+      },
     };
+
+    const dustConfig = {
+      ...walletConfig,
+      costParameters: {
+        ledgerParams: dustOptions.ledgerParams,
+        additionalFeeOverhead: dustOptions.additionalFeeOverhead,
+        feeBlocksMargin: dustOptions.feeBlocksMargin,
+      },
+    };
+
+    const seeds = seed ? WalletSeeds.fromMasterSeed(seed) : WalletSeeds.generateRandom();
+    const keystore = createKeystore(seeds.unshielded, env.walletNetworkId as any);
+
+    // Fast-forward probe: on live networks with millions of blocks (e.g. Preprod/Preview),
+    // starting dust and shielded wallets from block 0 streams millions of ledger events
+    // into Node heap and causes fatal OOM. By probing the current tip event ID, we fast-forward
+    // the wallet's initial offset to the chain tip so it only syncs the latest ~10 blocks.
+    let dustMaxId = 0;
+    let zswapMaxId = 0;
+    if (env.walletNetworkId === 'preprod' || env.walletNetworkId === 'preview') {
+      try {
+        [dustMaxId, zswapMaxId] = await Promise.all([
+          probeLatestLedgerEventId(env.indexerWS, 'dustLedgerEvents'),
+          probeLatestLedgerEventId(env.indexerWS, 'zswapLedgerEvents'),
+        ]);
+        logger.info(`Network tip probe: dustMaxId=${dustMaxId}, zswapMaxId=${zswapMaxId}`);
+      } catch (e: any) {
+        logger.warn(`Tip probe failed, continuing with standard sync: ${e.message}`);
+      }
+    }
+
+    const unshieldedWallet = WalletFactory.createUnshieldedWallet(walletConfig as any, keystore);
+
+    let dustWallet = WalletFactory.createDustWallet(walletConfig as any, seeds.dust, dustOptions);
+    if (dustMaxId > 20) {
+      logger.info(`Fast-forwarding DUST sync to chain tip (offset: ${dustMaxId - 10})`);
+      const serialized = await dustWallet.serializeState();
+      const parsed = JSON.parse(serialized);
+      parsed.offset = String(dustMaxId - 10);
+      dustWallet = (DustWallet(dustConfig as any) as any).restore(JSON.stringify(parsed));
+    }
+
+    let shieldedWallet = WalletFactory.createShieldedWallet(walletConfig as any, seeds.shielded);
+    if (zswapMaxId > 20) {
+      logger.info(`Fast-forwarding shielded sync to chain tip (offset: ${zswapMaxId - 10})`);
+      const serialized = await shieldedWallet.serializeState();
+      const parsed = JSON.parse(serialized);
+      parsed.offset = String(zswapMaxId - 10);
+      shieldedWallet = (ShieldedWallet(walletConfig as any) as any).restore(JSON.stringify(parsed));
+    }
+
+    const wallet = await WalletFactory.createWalletFacade(
+      walletConfig as any,
+      shieldedWallet,
+      unshieldedWallet,
+      dustWallet,
+    );
 
     const initialState = await getInitialShieldedState(logger, wallet.shielded);
     logger.debug(`Wallet seed: ${seeds.masterSeed}, address: ${initialState.address.coinPublicKeyString()}`);
-
-    // Shielded wallet is auto-started by FluentWalletBuilder and attempts to scan
-    // hundreds of thousands of historical blocks, causing OOM crashes on live networks.
-    // For smart contract deployment we only need unshielded + dust tokens, so stop
-    // shielded sync immediately.
-    try {
-      await wallet.shielded.stop();
-    } catch {
-      // ignore
-    }
 
     return new MidnightWalletProvider(
       logger,
