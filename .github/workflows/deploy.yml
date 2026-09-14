@@ -44,12 +44,20 @@ jobs:
           cd preprod-deployment/contracts
           npm run build
           
+      - name: Increase swap space
+        run: |
+          sudo fallocate -l 10G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=10240
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Deploy Contract
         run: |
           cd preprod-deployment/cli
           npx tsx src/launcher/deploy-gatecheck.ts
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: "--max-old-space-size=8192"
           WALLET_SEED: ${{ secrets.WALLET_SEED }}
 
       - name: Upload Deployment Info

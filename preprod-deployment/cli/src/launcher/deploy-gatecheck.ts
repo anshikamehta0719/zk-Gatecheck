@@ -68,7 +68,14 @@ async function main() {
   }
 
   console.log("Syncing DUST wallet with Preprod...");
+  const dustSub = walletProvider.wallet.dust.state.pipe(
+    Rx.throttleTime(5000),
+  ).subscribe((s) => {
+    const p = s.progress as any;
+    console.log(`DUST sync progress: applied=${p?.appliedIndex}, highest=${p?.highestIndex}`);
+  });
   await walletProvider.wallet.dust.waitForSyncedState(100n);
+  dustSub.unsubscribe();
 
   console.log("Checking / Registering DUST generation...");
   const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
