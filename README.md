@@ -15,13 +15,29 @@ Built on **Midnight** for the **Midnight Builder Challenge — Level 4 (Waxing G
 
 ## ⚡ Quick Links
 
-| Resource | Destination |
+- 🌐 **Live dApp:** [https://zk-gatecheck.vercel.app/](https://zk-gatecheck.vercel.app/)
+- 🎬 **Demo Video:** [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing)
+- 📖 **Documentation:** [Usage Guide](./docs/USAGE.md) · [Architecture Spec](./docs/ARCHITECTURE.md)
+
+---
+
+## 📜 Deployed Contract Address (Preprod)
+
+| Parameter | Details |
 |---|---|
-| **Live dApp** | [zk-gatecheck.vercel.app](https://zk-gatecheck.vercel.app/) |
-| **Preprod Explorer** | [Midnight Contract Explorer](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5) |
-| **Demo Video** | [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing) |
-| **Product X (Twitter)** | [@zk_gatecheck](https://x.com/zk_gatecheck) |
-| **Detailed Docs** | [Usage Guide](./docs/USAGE.md) · [Architecture Spec](./docs/ARCHITECTURE.md) |
+| **Network** | Midnight Preprod Testnet |
+| **Contract Address** | [`0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5`](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5) |
+| **Explorer Verification** | [https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5) |
+| **Deploy Transaction** | `1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55` |
+| **Block Height** | `2544554` (`b07546b7cf731dc7881bf24b346b7e276bc3530cfda3d002a1b1f2febc3519c4`) |
+| **DUST Registration Tx** | `00f0ae7a402100104a99a2eb4329f5b1ea8ed5ffc9b6a8a85d9513fd53dc24555c` |
+
+**Verify via Midnight GraphQL Indexer:**
+```bash
+curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ contractAction(address: \"75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5\") { address transaction { hash block { height timestamp } } } }"}'
+```
 
 ---
 
@@ -53,23 +69,6 @@ Traditional token gates expose user identities by cross-referencing public walle
 |---|---|---|
 | **Public (On-Chain)** | `allowlistRoot`, `nullifiers`, `accessGranted`, `issuer` | Verifies membership proofs, blocks replays, tracks usage count |
 | **Private (Client-Side)** | `secretKey`, `merklePath`, `pathDirections`, member identity | Kept exclusively on user device; never sent over network or stored on ledger |
-
----
-
-## ⛓️ On-Chain Preprod Deployment
-
-- **Contract Address:** `0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5`
-- **Deploy Transaction:** `1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55`
-- **Block Height:** `2544554` (`b07546b7cf731dc7881bf24b346b7e276bc3530cfda3d002a1b1f2febc3519c4`)
-- **DUST Registration Tx:** `00f0ae7a402100104a99a2eb4329f5b1ea8ed5ffc9b6a8a85d9513fd53dc24555c`
-- **Explorer:** [View on Midnight Explorer](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5)
-
-**Verify directly via Midnight GraphQL Indexer:**
-```bash
-curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
-  -H "Content-Type: application/json" \
-  -d '{"query":"{ contractAction(address: \"75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5\") { address transaction { hash block { height timestamp } } } }"}'
-```
 
 ---
 
