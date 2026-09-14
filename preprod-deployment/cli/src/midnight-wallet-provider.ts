@@ -84,7 +84,7 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
     const recipe = await this.wallet.balanceUnboundTransaction(
       tx,
       { shieldedSecretKeys: this.zswapSecretKeys, dustSecretKey: this.dustSecretKey },
-      { ttl, tokenKindsToBalance: ['unshielded', 'dust'] as any },
+      { ttl, tokenKindsToBalance: ['unshielded'] as any },
     );
     const signedRecipe = await this.wallet.signRecipe(recipe, (payload) => this.unshieldedKeystore.signData(payload));
     return this.wallet.finalizeRecipe(signedRecipe);
@@ -95,10 +95,9 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
   }
 
   async start(): Promise<void> {
-    this.logger.debug('Starting unshielded and dust wallet...');
+    this.logger.debug('Starting unshielded wallet...');
     await Promise.all([
       this.wallet.unshielded.start(),
-      this.wallet.dust.start(this.dustSecretKey),
       (this.wallet as any).pendingTransactionsService?.start?.() ?? Promise.resolve(),
     ]);
   }
@@ -106,7 +105,6 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
   async stop(): Promise<void> {
     await Promise.all([
       this.wallet.unshielded.stop(),
-      this.wallet.dust.stop(),
       (this.wallet as any).submissionService?.close?.() ?? Promise.resolve(),
       (this.wallet as any).pendingTransactionsService?.stop?.() ?? Promise.resolve(),
     ]);

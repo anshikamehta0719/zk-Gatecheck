@@ -29,7 +29,7 @@ async function main() {
   console.log("Starting environment...");
   const envConfiguration = await testEnv.start();
   
-  console.log("Building wallet provider (with chain-tip fast forward)...");
+  console.log("Building wallet provider...");
   const walletProvider = await MidnightWalletProvider.build(logger, envConfiguration, seed);
   await walletProvider.start();
   
@@ -67,24 +67,7 @@ async function main() {
     console.log(`Received funds! New balance: ${nightBalance} tNIGHT`);
   }
 
-  console.log("Syncing DUST wallet with Preprod...");
-  const dustSub = walletProvider.wallet.dust.state.pipe(
-    Rx.throttleTime(5000),
-  ).subscribe((s) => {
-    const p = s.progress as any;
-    console.log(`DUST sync progress: applied=${p?.appliedIndex}, highest=${p?.highestIndex}`);
-  });
-  await walletProvider.wallet.dust.waitForSyncedState(100n);
-  dustSub.unsubscribe();
-
-  console.log("Checking / Registering DUST generation...");
-  const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
-  if (dustTx) {
-    console.log(`Registered DUST generation (tx: ${dustTx}). Waiting for dust state to sync...`);
-    await walletProvider.wallet.dust.waitForSyncedState(100n);
-  } else {
-    console.log("DUST already registered or available.");
-  }
+  console.log("Proceeding to contract deployment with unshielded balance...");
 
   console.log("Initializing providers...");
   const zkConfigProvider = new NodeZkConfigProvider(config.zkConfigPath);
