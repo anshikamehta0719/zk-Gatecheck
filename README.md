@@ -1,6 +1,6 @@
 # Gatecheck
 
-![CI](https://github.com/YOUR_GITHUB_USERNAME/zk-gatecheck/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/anshikamehta0719/zk-Gatecheck/actions/workflows/ci.yml/badge.svg)
 
 > Prove you belong to a private allowlist — without revealing who you are, which wallet you hold, or who else is on the list.
 
@@ -16,11 +16,15 @@ The demo runs the exact rules encoded in [`contracts/gatecheck.compact`](./contr
 
 ## Contract Address
 
-| Network | Address |
-|---|---|
-| Preprod | `[ADD YOUR DEPLOYED CONTRACT ADDRESS HERE AFTER RUNNING THE DEPLOY STEP BELOW]` |
+| Network | Address | Explorer Link |
+|---|---|---|
+| **Midnight Preprod** | `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5` | [**View on Midnight Explorer**](https://preprod.midnight.network/contract/75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5) |
 
-> ⚠️ **This table is filled in after you run the Preprod deploy yourself** — see [Deploying to Preprod](#deploying-to-preprod) below. A submission is not valid without a real address here.
+> 🚀 **Verified On-Chain Deployment**: Deployed and confirmed on the Midnight Preprod Network.
+> - **Contract Address:** `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5`
+> - **DUST Registration Tx:** `00f0ae7a402100104a99a2eb4329f5b1ea8ed5ffc9b6a8a85d9513fd53dc24555c`
+> - **Midnight Preprod Indexer:** `https://indexer.preprod.midnight.network/api/v4/graphql`
+> - **Substrate RPC Node:** `https://rpc.preprod.midnight.network`
 
 ## What This Product Does
 
