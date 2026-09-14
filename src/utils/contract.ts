@@ -48,7 +48,7 @@ export type CheckAccessResult =
   | { ok: false; reason: "not-a-member" | "already-used" };
 
 const DEMO_CONTRACT_ADDRESS =
-  "0x02f1a6c9d4e7b83a1c5f0e9d2b4a7c6e1f3d8b0a9c2e5f7a1b4d6c8e0a2f4b6d" as Hex;
+  "75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5" as Hex;
 
 /**
  * Simulated on-chain state. In production this lives entirely in the
@@ -59,20 +59,25 @@ class SimulatedGatecheckLedger {
   private indexBySecret = new Map<Hex, number>();
   private spentNullifiers = new Set<Hex>();
   private accessGranted = 0;
+  private cachedState: LedgerState | null = null;
 
   enroll(secret: Hex): void {
     const index = this.tree.addMember(leafOf(secret));
     this.indexBySecret.set(secret, index);
+    this.cachedState = null;
   }
 
   publicState(): LedgerState {
-    return {
-      allowlistRoot: this.tree.root(),
-      memberCount: this.tree.size(),
-      accessGranted: this.accessGranted,
-      spentNullifiers: new Set(this.spentNullifiers),
-      contractAddress: DEMO_CONTRACT_ADDRESS,
-    };
+    if (!this.cachedState) {
+      this.cachedState = {
+        allowlistRoot: this.tree.root(),
+        memberCount: this.tree.size(),
+        accessGranted: this.accessGranted,
+        spentNullifiers: new Set(this.spentNullifiers),
+        contractAddress: DEMO_CONTRACT_ADDRESS,
+      };
+    }
+    return this.cachedState;
   }
 
   /** Mirrors the `checkAccess` circuit's assertions exactly. */
@@ -95,6 +100,7 @@ class SimulatedGatecheckLedger {
 
     this.spentNullifiers.add(nullifier);
     this.accessGranted += 1;
+    this.cachedState = null;
     return { ok: true, nullifier };
   }
 
@@ -103,6 +109,7 @@ class SimulatedGatecheckLedger {
     this.indexBySecret.clear();
     this.spentNullifiers.clear();
     this.accessGranted = 0;
+    this.cachedState = null;
   }
 }
 
