@@ -28,6 +28,6 @@ Post these from your product's X account, in order, spaced out over the day. Fil
 
 > Try Gatecheck yourself — issue a test allowlist, generate a member secret, and watch a zero-knowledge gate-check happen in real time, no wallet required:
 >
-> [ADD YOUR PREPROD/DEMO LINK HERE]
->
-> Repo + full privacy writeup: [ADD YOUR GITHUB REPO LINK HERE]
+> 🌐 Live Preprod dApp: https://zk-gatecheck.vercel.app/
+> 📜 Verified Contract: https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5
+> 💻 GitHub Repo + Writeup: https://github.com/anshikamehta0719/zk-Gatecheck
