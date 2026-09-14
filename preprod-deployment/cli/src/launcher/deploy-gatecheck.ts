@@ -123,7 +123,7 @@ async function main() {
 
   console.log("Initializing providers...");
   const zkConfigProvider = new NodeZkConfigProvider(config.zkConfigPath);
-  const storagePassword = "temporary-password";
+  const storagePassword = "TempPassword123!Secure";
   
   const providers = {
     privateStateProvider: levelPrivateStateProvider({

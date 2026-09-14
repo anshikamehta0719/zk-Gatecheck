@@ -132,8 +132,8 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
         feeBlocksMargin: 5,
       },
       batchUpdates: {
-        size: 1000,
-        timeout: 50,
+        size: 5000,
+        timeout: 10,
         spacing: 0,
       },
     };
