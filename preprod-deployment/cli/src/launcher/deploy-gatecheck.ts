@@ -49,6 +49,11 @@ async function main() {
     
     unshieldedState = await Rx.firstValueFrom(
       walletProvider.wallet.unshielded.state.pipe(
+        Rx.throttleTime(5000),
+        Rx.tap((state) => {
+          const bal = state.balances[unshieldedToken().raw] ?? 0n;
+          console.log(`Waiting for tokens... current balance: ${bal} tNIGHT`);
+        }),
         Rx.filter((state) => (state.balances[unshieldedToken().raw] ?? 0n) > 0n),
         Rx.timeout(300000)
       )

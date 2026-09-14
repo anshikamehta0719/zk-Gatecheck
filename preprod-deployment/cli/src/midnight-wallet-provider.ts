@@ -74,7 +74,7 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
     const recipe = await this.wallet.balanceUnboundTransaction(
       tx,
       { shieldedSecretKeys: this.zswapSecretKeys, dustSecretKey: this.dustSecretKey },
-      { ttl },
+      { ttl, tokenKindsToBalance: ['unshielded', 'dust'] as any },
     );
     const signedRecipe = await this.wallet.signRecipe(recipe, (payload) => this.unshieldedKeystore.signData(payload));
     return this.wallet.finalizeRecipe(signedRecipe);
@@ -120,6 +120,16 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
 
     const initialState = await getInitialShieldedState(logger, wallet.shielded);
     logger.debug(`Wallet seed: ${seeds.masterSeed}, address: ${initialState.address.coinPublicKeyString()}`);
+
+    // Shielded wallet is auto-started by FluentWalletBuilder and attempts to scan
+    // hundreds of thousands of historical blocks, causing OOM crashes on live networks.
+    // For smart contract deployment we only need unshielded + dust tokens, so stop
+    // shielded sync immediately.
+    try {
+      await wallet.shielded.stop();
+    } catch {
+      // ignore
+    }
 
     return new MidnightWalletProvider(
       logger,
