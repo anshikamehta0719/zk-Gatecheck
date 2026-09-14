@@ -131,6 +131,11 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
       costParameters: {
         feeBlocksMargin: 5,
       },
+      batchUpdates: {
+        size: 1000,
+        timeout: 50,
+        spacing: 0,
+      },
     };
 
     const seeds = seed ? WalletSeeds.fromMasterSeed(seed) : WalletSeeds.generateRandom();

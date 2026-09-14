@@ -77,10 +77,10 @@ async function main() {
     console.log(`Received funds! New balance: ${nightBalance} tNIGHT`);
   }
 
-  console.log("Syncing DUST wallet with Preprod (this may take ~30-45 minutes)...");
+  console.log("Syncing DUST wallet with Preprod (fast batch sync)...");
   let lastLoggedPct = -1;
   const dustSub = walletProvider.wallet.dust.state.pipe(
-    Rx.throttleTime(15000),
+    Rx.sampleTime(5000),
   ).subscribe((s) => {
     const p = s.progress as any;
     const applied = Number(p?.appliedIndex ?? 0);
@@ -88,7 +88,11 @@ async function main() {
     const pct = highest > 0 ? Math.floor((applied * 100) / highest) : 0;
     if (pct !== lastLoggedPct) {
       lastLoggedPct = pct;
-      console.log(`DUST sync progress: ${pct}% (applied: ${applied} / ${highest})`);
+      const memMb = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+      console.log(`DUST sync progress: ${pct}% (applied: ${applied} / ${highest}, heap: ${memMb}MB)`);
+      if (typeof (globalThis as any).gc === 'function') {
+        try { (globalThis as any).gc(); } catch {}
+      }
     }
   });
 
