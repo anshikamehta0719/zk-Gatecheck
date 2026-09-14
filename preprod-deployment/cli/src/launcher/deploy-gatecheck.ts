@@ -77,12 +77,6 @@ async function main() {
     console.log(`Received funds! New balance: ${nightBalance} tNIGHT`);
   }
 
-  console.log("Checking / Registering DUST generation...");
-  const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
-  if (dustTx) {
-    console.log(`Registered DUST generation tx: ${dustTx}`);
-  }
-
   console.log("Syncing DUST wallet with Preprod (this may take ~30-45 minutes)...");
   let lastLoggedPct = -1;
   const dustSub = walletProvider.wallet.dust.state.pipe(
@@ -101,6 +95,16 @@ async function main() {
   await walletProvider.wallet.dust.waitForSyncedState(100n);
   dustSub.unsubscribe();
   console.log("DUST wallet fully synchronized!");
+
+  console.log("Checking / Registering DUST generation...");
+  const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
+  if (dustTx) {
+    console.log(`Registered DUST generation tx: ${dustTx}`);
+    console.log("Waiting for registered UTXO to be included in block...");
+    await walletProvider.wallet.dust.waitForSyncedState(100n);
+  } else {
+    console.log("DUST already registered.");
+  }
 
   console.log("Waiting for DUST accrual from registered NIGHT...");
   const dustBalance = await Rx.firstValueFrom(
