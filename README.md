@@ -85,6 +85,16 @@ Traditional token gates expose user identities by cross-referencing public walle
 
 ---
 
+## ⚙️ Automated CI/CD Pipeline
+
+![Gatecheck CI/CD Pipeline](./screenshots/ci-workflow.png)
+
+Every commit to `main` runs automated GitHub Actions workflows:
+- **Typecheck, Test, & Build:** Verifies TypeScript types, executes unit tests, and compiles the production web build.
+- **Compact Contract Check:** Sanity-checks and validates the confidential smart contract logic in [`contracts/gatecheck.compact`](./contracts/gatecheck.compact).
+
+---
+
 ## 💻 Local Setup & Testing
 
 ```bash
