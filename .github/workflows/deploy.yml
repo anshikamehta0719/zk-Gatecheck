@@ -23,6 +23,7 @@ jobs:
           cd preprod-deployment
           npm install
           npm install --no-save tsx
+          node infra/scripts/patch-wallet-sdk.mjs
 
       - name: Copy Contract
         run: |

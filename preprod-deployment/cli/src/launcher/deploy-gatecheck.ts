@@ -67,7 +67,41 @@ async function main() {
     console.log(`Received funds! New balance: ${nightBalance} tNIGHT`);
   }
 
-  console.log("Proceeding to contract deployment with unshielded balance...");
+  console.log("Checking / Registering DUST generation...");
+  const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
+  if (dustTx) {
+    console.log(`Registered DUST generation tx: ${dustTx}`);
+  }
+
+  console.log("Syncing DUST wallet with Preprod (this may take ~30-45 minutes)...");
+  let lastLoggedPct = -1;
+  const dustSub = walletProvider.wallet.dust.state.pipe(
+    Rx.throttleTime(15000),
+  ).subscribe((s) => {
+    const p = s.progress as any;
+    const applied = Number(p?.appliedIndex ?? 0);
+    const highest = Number(p?.highestRelevantWalletIndex ?? p?.highestIndex ?? 1520000);
+    const pct = highest > 0 ? Math.floor((applied * 100) / highest) : 0;
+    if (pct !== lastLoggedPct) {
+      lastLoggedPct = pct;
+      console.log(`DUST sync progress: ${pct}% (applied: ${applied} / ${highest})`);
+    }
+  });
+
+  await walletProvider.wallet.dust.waitForSyncedState(100n);
+  dustSub.unsubscribe();
+  console.log("DUST wallet fully synchronized!");
+
+  console.log("Waiting for DUST accrual from registered NIGHT...");
+  const dustBalance = await Rx.firstValueFrom(
+    walletProvider.wallet.state().pipe(
+      Rx.throttleTime(2000),
+      Rx.filter((s) => s.dust.balance(new Date()) > 0n),
+      Rx.map((s) => s.dust.balance(new Date())),
+      Rx.timeout(300000),
+    ),
+  );
+  console.log(`DUST available: ${dustBalance}! Deploying contract...`);
 
   console.log("Initializing providers...");
   const zkConfigProvider = new NodeZkConfigProvider(config.zkConfigPath);
