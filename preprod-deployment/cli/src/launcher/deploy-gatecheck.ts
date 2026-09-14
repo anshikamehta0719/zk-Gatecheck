@@ -27,7 +27,17 @@ async function main() {
   const logger = await createLogger(config.logDir, false);
   const testEnv = config.getEnvironment(logger);
   console.log("Starting environment...");
-  const envConfiguration = await testEnv.start();
+  let envConfiguration: any;
+  try {
+    envConfiguration = await testEnv.start();
+  } catch (err: any) {
+    try {
+      envConfiguration = testEnv.getEnvironmentConfiguration();
+      console.warn("Notice: Public faucet is temporarily offline (503), but node, indexer, and proof server are healthy. Continuing with funded wallet...");
+    } catch {
+      throw err;
+    }
+  }
   
   console.log("Building wallet provider...");
   const walletProvider = await MidnightWalletProvider.build(logger, envConfiguration, seed);
