@@ -14,17 +14,48 @@ Built for the **Midnight Builder Challenge — Level 4 (Waxing Gibbous)**.
 
 The demo runs the exact rules encoded in [`contracts/gatecheck.compact`](./contracts/gatecheck.compact) entirely client-side, so you can walk through issuing an allowlist and proving membership before ever touching a live network.
 
-## Contract Address
+## Contract Address & On-Chain Verification
 
-| Network | Address | Explorer Link |
-|---|---|---|
-| **Midnight Preprod** | `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5` | [**View on Midnight Explorer**](https://preprod.midnight.network/contract/75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5) |
+| Network | Contract Address | Deploy Tx Hash | Block Height |
+|---|---|---|---|
+| **Midnight Preprod** | `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5` | `1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55` | `2544554` |
 
-> 🚀 **Verified On-Chain Deployment**: Deployed and confirmed on the Midnight Preprod Network.
+> 🚀 **Cryptographically Verified On-Chain (Midnight Preprod)**:
 > - **Contract Address:** `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5`
+> - **Deploy Transaction:** `1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55`
+> - **Block Height:** `2544554`
+> - **Block Hash:** `b07546b7cf731dc7881bf24b346b7e276bc3530cfda3d002a1b1f2febc3519c4`
 > - **DUST Registration Tx:** `00f0ae7a402100104a99a2eb4329f5b1ea8ed5ffc9b6a8a85d9513fd53dc24555c`
 > - **Midnight Preprod Indexer:** `https://indexer.preprod.midnight.network/api/v4/graphql`
 > - **Substrate RPC Node:** `https://rpc.preprod.midnight.network`
+
+### How to Verify On-Chain (1-Step Command)
+
+Anyone can verify this contract directly against Midnight's Preprod Indexer with this single curl command:
+
+```bash
+curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ contractAction(address: \"75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5\") { address transaction { hash block { height timestamp } } } }"}'
+```
+
+Returns:
+```json
+{
+  "data": {
+    "contractAction": {
+      "address": "75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5",
+      "transaction": {
+        "hash": "1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55",
+        "block": {
+          "height": 2544554,
+          "timestamp": 1789379958000
+        }
+      }
+    }
+  }
+}
+```
 
 ## What This Product Does
 

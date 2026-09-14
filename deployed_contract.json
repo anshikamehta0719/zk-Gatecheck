@@ -1,9 +1,11 @@
 {
   "network": "preprod",
   "contractAddress": "75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5",
-  "explorerUrl": "https://preprod.midnight.network/contract/75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5",
+  "deployTxHash": "1e9d37f77f0e782e108e80dbe2f5fdcc568f5b5ec3941ae8f62d09b0d1d2bb55",
+  "blockHeight": 2544554,
+  "blockHash": "b07546b7cf731dc7881bf24b346b7e276bc3530cfda3d002a1b1f2febc3519c4",
   "indexer": "https://indexer.preprod.midnight.network/api/v4/graphql",
   "node": "https://rpc.preprod.midnight.network",
   "proofServer": "https://preprod.midnight.network",
-  "deployedAt": "2026-09-14T09:59:32.000Z"
+  "deployedAt": "2026-09-14T09:59:18.000Z"
 }
