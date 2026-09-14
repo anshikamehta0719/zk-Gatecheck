@@ -85,12 +85,21 @@ export class MidnightWalletProvider implements MidnightProvider, WalletProvider 
   }
 
   async start(): Promise<void> {
-    this.logger.debug('Starting wallet...');
-    await this.wallet.start(this.zswapSecretKeys, this.dustSecretKey);
+    this.logger.debug('Starting unshielded and dust wallet...');
+    await Promise.all([
+      this.wallet.unshielded.start(),
+      this.wallet.dust.start(this.dustSecretKey),
+      (this.wallet as any).pendingTransactionsService?.start?.() ?? Promise.resolve(),
+    ]);
   }
 
   async stop(): Promise<void> {
-    return this.wallet.stop();
+    await Promise.all([
+      this.wallet.unshielded.stop(),
+      this.wallet.dust.stop(),
+      (this.wallet as any).submissionService?.close?.() ?? Promise.resolve(),
+      (this.wallet as any).pendingTransactionsService?.stop?.() ?? Promise.resolve(),
+    ]);
   }
 
   static async build(logger: Logger, env: EnvironmentConfiguration, seed?: string): Promise<MidnightWalletProvider> {

@@ -49,4 +49,5 @@ jobs:
           cd preprod-deployment/cli
           npx tsx src/launcher/deploy-gatecheck.ts
         env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
           WALLET_SEED: ${{ secrets.WALLET_SEED }}

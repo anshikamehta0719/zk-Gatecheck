@@ -7,9 +7,11 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { CompiledBBoardContractContract } from '@midnight-ntwrk/bboard-contract';
 import { createLogger } from '../logger-utils.ts';
-import { syncWallet, waitForUnshieldedFunds, getUnshieldedAddress } from '../wallet-utils.ts';
+import { getUnshieldedAddress } from '../wallet-utils.ts';
 import { generateDust } from '../generate-dust.ts';
 import { unshieldedToken } from '@midnight-ntwrk/midnight-js-protocol/ledger';
+import { FaucetClient } from '@midnight-ntwrk/testkit-js';
+import * as Rx from 'rxjs';
 
 async function main() {
   console.log("Starting deployment to Preprod...");
@@ -29,33 +31,40 @@ async function main() {
   const walletAddress = await getUnshieldedAddress(logger, walletProvider.wallet);
   console.log(`Wallet Address: ${walletAddress}`);
 
-  console.log("Syncing wallet with Preprod...");
-  let syncedState = await syncWallet(logger, walletProvider.wallet, 2000, (detail) => console.log(detail), 300000);
-  
-  let unshieldedState = syncedState.unshielded;
+  console.log("Syncing unshielded wallet with Preprod...");
+  let unshieldedState = await walletProvider.wallet.unshielded.waitForSyncedState();
   let nightBalance = unshieldedState.balances[unshieldedToken().raw] ?? 0n;
   console.log(`Current tNIGHT balance: ${nightBalance}`);
 
   if (nightBalance === 0n) {
     console.log("Wallet has 0 tNIGHT. Requesting funds from faucet...");
-    unshieldedState = await waitForUnshieldedFunds(
-      logger,
-      walletProvider.wallet,
-      envConfiguration,
-      unshieldedToken(),
-      true,
-      2000,
-      { timeoutMs: 300000 }
+    if (envConfiguration.faucet) {
+      try {
+        await new FaucetClient(envConfiguration.faucet, logger).requestTokens(walletAddress);
+        console.log("Faucet request sent successfully. Waiting for tokens...");
+      } catch (e: any) {
+        console.warn(`Faucet request warning: ${e.message}`);
+      }
+    }
+    
+    unshieldedState = await Rx.firstValueFrom(
+      walletProvider.wallet.unshielded.state.pipe(
+        Rx.filter((state) => (state.balances[unshieldedToken().raw] ?? 0n) > 0n),
+        Rx.timeout(300000)
+      )
     );
     nightBalance = unshieldedState.balances[unshieldedToken().raw] ?? 0n;
-    console.log(`Received funds! New balance: ${nightBalance}`);
+    console.log(`Received funds! New balance: ${nightBalance} tNIGHT`);
   }
+
+  console.log("Syncing DUST wallet with Preprod...");
+  await walletProvider.wallet.dust.waitForSyncedState();
 
   console.log("Checking / Registering DUST generation...");
   const dustTx = await generateDust(logger, seed, unshieldedState, walletProvider.wallet);
   if (dustTx) {
-    console.log(`Registered DUST generation (tx: ${dustTx}). Syncing wallet...`);
-    await syncWallet(logger, walletProvider.wallet, 2000, undefined, 300000);
+    console.log(`Registered DUST generation (tx: ${dustTx}). Waiting for dust state to sync...`);
+    await walletProvider.wallet.dust.waitForSyncedState();
   } else {
     console.log("DUST already registered or available.");
   }
@@ -102,4 +111,7 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});
