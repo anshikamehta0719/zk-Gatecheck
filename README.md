@@ -48,7 +48,6 @@ curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
 
 ### Block Explorer Screenshot
 ![Block Explorer Screenshot](./screenshots/block.png)
-*(Note: Please ensure the actual block explorer screenshot is uploaded to `./screenshots/block.png`)*
 
 ---
 
@@ -99,7 +98,6 @@ Traditional token gates expose user identities by cross-referencing public walle
 
 ### Architecture Diagrams
 ![Architecture Diagram](./screenshots/architecture-diagram.jpg)
-*(Note: Please ensure the architecture diagram is uploaded to `./screenshots/architecture-diagram.jpg`)*
 
 | Layer | Technology | Purpose |
 |---|---|---|
