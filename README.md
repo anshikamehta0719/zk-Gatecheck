@@ -47,8 +47,8 @@ curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
 ```
 
 ### Block Explorer Screenshot
-![Block Explorer Screenshot](./screenshots/blockexplorer.png)
-*(Note: Please ensure the actual block explorer screenshot is uploaded to `./screenshots/blockexplorer.png`)*
+![Block Explorer Screenshot](./screenshots/block.png)
+*(Note: Please ensure the actual block explorer screenshot is uploaded to `./screenshots/block.png`)*
 
 ---
 
