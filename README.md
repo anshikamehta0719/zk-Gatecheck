@@ -7,22 +7,28 @@
 ![Commits](https://img.shields.io/badge/Commits-50%2B-brightgreen)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-> **Prove you belong to a private allowlist — without revealing who you are, which wallet you hold, or who else is on the list.**
+## Project Description
+**Gatecheck** allows you to **prove you belong to a private allowlist — without revealing who you are, which wallet you hold, or who else is on the list.** 
 
 Built on **Midnight** for the **Midnight Builder Challenge — Level 4 (Waxing Gibbous)**.
 
+## Project Vision
+Our vision is to provide a privacy-critical, zero-knowledge gating mechanism for DAOs, private events, and premium content, ensuring Sybil resistance without compromising user anonymity or on-chain linkability.
+
 ---
 
-## ⚡ Quick Links
+## ⚡ Quick Links & Social Media
 
 - 🌐 **Live dApp:** [https://zk-gatecheck.vercel.app/](https://zk-gatecheck.vercel.app/)
-- 🐦 **Product X Profile:** [@zkgatechek](https://x.com/zkgatechek) · [Launch Announcement Tweet](https://x.com/zkgatechek/status/2099499510703812849)
+- 🐦 **Social Media Handle Links:** 
+  - **Product X Profile:** [@zkgatechek](https://x.com/zkgatechek)
+  - **Launch Announcement:** [Tweet](https://x.com/zkgatechek/status/2099499510703812849)
 - 🎬 **Demo Video:** [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing)
 - 📖 **Documentation:** [Usage Guide](./docs/USAGE.md) · [Architecture Spec](./docs/ARCHITECTURE.md)
 
 ---
 
-## 📜 Deployed Contract Address (Preprod)
+## 📜 Mainnet / Testnet Contract Details
 
 | Parameter | Details |
 |---|---|
@@ -39,6 +45,10 @@ curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ contractAction(address: \"75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5\") { address transaction { hash block { height timestamp } } } }"}'
 ```
+
+### Block Explorer Screenshot
+![Block Explorer Screenshot](./screenshots/blockexplorer.png)
+*(Note: Please ensure the actual block explorer screenshot is uploaded to `./screenshots/blockexplorer.png`)*
 
 ---
 
@@ -58,6 +68,18 @@ curl -X POST https://indexer.preprod.midnight.network/api/v4/graphql \
 
 ---
 
+## ✨ Key Features
+- **Zero-Knowledge Proofs:** Prove membership without revealing identity.
+- **Off-Chain Merkle Trees:** Efficient allowlist management without on-chain bloat.
+- **Sybil Resistance:** Deterministic nullifiers prevent replay attacks and double usage.
+- **Privacy-Critical Core:** Wallet and secret unlinkability enforced at the smart contract level.
+
+## 🚀 User Onboarding Detail
+1. **Connect Wallet:** User connects their Midnight Lace wallet.
+2. **Input Secret:** User provides their unique, privately issued secret key.
+3. **Generate Proof:** The client-side app generates a zero-knowledge proof of membership against the on-chain Merkle root.
+4. **Submit & Verify:** The proof is submitted to the network. Upon success, a nullifier is recorded, and the user gains access to the gated content.
+
 ## 🔒 How It Works & Privacy Model
 
 Traditional token gates expose user identities by cross-referencing public wallet addresses against an on-chain allowlist. **Gatecheck** separates *eligibility* from *identity*:
@@ -75,6 +97,10 @@ Traditional token gates expose user identities by cross-referencing public walle
 
 ## 🛠️ Tech Stack & Architecture
 
+### Architecture Diagrams
+![Architecture Diagram](./screenshots/architecture-diagram.jpg)
+*(Note: Please ensure the architecture diagram is uploaded to `./screenshots/architecture-diagram.jpg`)*
+
 | Layer | Technology | Purpose |
 |---|---|---|
 | **ZK Smart Contract** | [Compact 0.31.1](https://docs.midnight.network) | Confidential shielded-state logic (`contracts/gatecheck.compact`) |
@@ -85,6 +111,12 @@ Traditional token gates expose user identities by cross-referencing public walle
 | **Testing & CI/CD** | Vitest, GitHub Actions | Automated unit tests and automated Preprod deployment |
 
 ---
+
+## 🔮 Future Scope
+- **Dynamic Allowlists:** Allow issuers to add or remove members seamlessly without full tree recalculation.
+- **Multi-Event Gating:** Support for multiple separate allowlists managed under a single contract.
+- **Mobile Integration:** Expand wallet support to mobile platforms for broader accessibility.
+- **Cross-Chain Verification:** Interoperate with other chains for token-gated access leveraging Midnight's privacy layer.
 
 ## ⚙️ Automated CI/CD Pipeline
 
