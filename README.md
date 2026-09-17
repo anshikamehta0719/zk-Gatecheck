@@ -151,6 +151,7 @@ npm run generate-allowlist -- --count 100
 
 ## 🏆 Level 4 Submission Checklist
 
+### Core Deliverables
 - [x] **Working MVP live on Preprod:** [zk-gatecheck.vercel.app](https://zk-gatecheck.vercel.app/)
 - [x] **Verifiable Contract Address:** [`0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5`](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5)
 - [x] **Midnight Explorer Proof:** [Preprod Explorer Verification](https://preprod.midnightexplorer.com/contracts/0x75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5)
@@ -159,6 +160,22 @@ npm run generate-allowlist -- --count 100
 - [x] **Product X Profile:** [@zkgatechek](https://x.com/zkgatechek) ([Launch Announcement Tweet](https://x.com/zkgatechek/status/2099499510703812849))
 - [x] **Demo Video:** [Watch Walkthrough (Google Drive)](https://drive.google.com/file/d/1M4d0wrOpUMhxW5WXRLGZL3Tp7azQBqZH/view?usp=sharing)
 - [x] **Minimum 15 Commits:** 50+ commits on `main`
+
+### Revisions & Reviewer Requirements
+- [x] **Project Title**
+- [x] **Project Description**
+- [x] **Project Vision**
+- [x] **Key Features**
+- [x] **Mainnet / Testnet Contract Details** (Contract ID and Explorer Screenshot)
+- [x] **Future Scope**
+- [x] **Architecture Diagrams**
+- [x] **User Onboarding Detail**
+- [x] **Social Media handle links**
+- [x] Verify MVP Contract — Privacy-Critical Core
+- [x] Verify MVP Live on Preprod with Documentation
+- [x] Verify CI/CD on Product Repository
+- [x] Verify Product X Profile
+- [x] Verify File Structure and Commit Quality
 
 ---
 
